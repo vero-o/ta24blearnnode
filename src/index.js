@@ -22,7 +22,9 @@ const routes = [
 ];
 
 export const router = createRouter({
-  history: createWebHistory(),
+  // BASE_URL tuleb Vite'ist: GitHub Pages serveerib lehte alamkaustast
+  // /ta24blearnnode/, localhostis on see lihtsalt '/'.
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes,
 });
 

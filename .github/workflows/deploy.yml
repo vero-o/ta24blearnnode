@@ -1,4 +1,6 @@
-name: Deploy
+# Ehitab Vue projekti ja avaldab selle GitHub Pages'is.
+# Leht: https://vero-o.github.io/ta24blearnnode/
+name: Deploy to GitHub Pages
 
 on:
   push:
@@ -15,33 +17,34 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  deploy-pages:
-    name: Deploy to GitHub Pages
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install
+        run: npm install
+      - name: Build
+        # base peab olema repo nimi, sest Pages serveerib alamkaustast
+        env:
+          VITE_BASE: /ta24blearnnode/
+        run: npx vite build
+      - name: SPA fallback
+        # vue-router kasutab history-režiimi; ilma 404.html-ita annaks
+        # otselink /clipboard peale GitHub Pages'is 404.
+        run: cp dist/index.html dist/404.html
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: Install dependencies
-        run: bun install
-
-      - name: Build
-        run: bun run build
-        env:
-          VITE_BASE: /${{ github.event.repository.name }}/
-
-
-      - uses: actions/configure-pages@v5
-
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist
-
-      - uses: actions/deploy-pages@v4
-        id: deployment
+      - id: deployment
+        uses: actions/deploy-pages@v4
